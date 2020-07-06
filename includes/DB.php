@@ -1,0 +1,5 @@
+<?php 
+
+$ConnectingDB = new PDO('');
+
+?>
