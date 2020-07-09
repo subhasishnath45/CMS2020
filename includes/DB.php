@@ -1,5 +1,8 @@
 <?php 
-
-$ConnectingDB = new PDO('qssqs');
+// default username = root
+// password = nothing
+// First argument is called DSN
+$DSN = 'mysql:host=localhost; dbname=CMS2020';
+$ConnectingDB = new PDO($DSN,'root','');
 
 ?>

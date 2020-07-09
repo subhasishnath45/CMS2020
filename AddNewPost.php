@@ -68,7 +68,7 @@ if(empty($Category)){
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Categories</title>
+    <title>Add new Post</title>
     <link rel="stylesheet" href="css/bootstrap.css"/>
     <link rel="stylesheet" href="css/main.css" />
 </head>
@@ -114,7 +114,7 @@ if(empty($Category)){
             <div class="container">
                 <div class="row">
                     <div class="col-md-12 text-center">
-                        <h1><i class="fas fa-edit"></i> Manage Categories</h1>
+                        <h1><i class="fas fa-edit"></i> Add New Post</h1>
                     </div>
                 </div>
             </div>
@@ -130,13 +130,46 @@ if(empty($Category)){
                     ?>
                 <form class="" action="categories.php" method="post">
                         <div class="card bg-secondary text-light mb-3">
-                            <div class="card-header text-uppercase text-center">
-                                <h1>Add new Category</h1>
-                            </div>
                             <div class="card-body bg-dark">
                                 <div class="form-group">
-                                    <label for="title"><span class="FieldInfo">Category Title: </span></label>
-                                    <input class="form-control" type="text" name="CategoryTitle" id="title" placeholder="Type title here" value="">
+                                    <label for="title"><span class="FieldInfo">Post Title: </span></label>
+                                    <input class="form-control" type="text" name="PostTitle" id="title" placeholder="Type title here" value="">
+                                </div>
+                                <div class="form-group">
+                                    <label for="CategoryTitle"><span class="FieldInfo">Choose category: </span></label>
+                                    <select class="form-control" name="Category" id="CategoryTitle">
+                                        <option disabled selected>Choose Post Category</option>
+                                        <?php 
+                                            // Fetching All categories from category table.
+                                            // global variable name is only required for php<5.7
+                                            global $ConnectingDB;
+                                            $sql = "SELECT * FROM category";
+                                            
+                                            $stmt = $ConnectingDB->query($sql);
+                                            while($DataRows = $stmt->fetch()){
+                                                // We will take only 2 columns from our table.
+                                                // field name of the table are id, title.
+                                                $Id = $DataRows["id"];
+                                                $CategoryName = $DataRows["title"];
+
+                                        ?>
+                                        <option value="<?php echo $Id; ?>"><?php echo $CategoryName; ?></option>
+                                        <?php
+                                            }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <div class="custom-file">
+                                        <input class="custom-file-input" type="file" name="Image" id="imageSelect"/>
+                                        <label class="custom-file-label" for="imageSelect">
+                                            Select Image...
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="Post"><span class="FieldInfo">Post: </span></label>
+                                    <textarea class="form-control" name="PostDescription" id="Post" cols="30" rows="5"></textarea>
                                 </div>
                                 <div class="row">
                                     <div class="col-lg-6 mb-2">
