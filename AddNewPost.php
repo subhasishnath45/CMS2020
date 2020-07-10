@@ -4,64 +4,79 @@
 <?php 
 if(isset($_POST['Submit'])){
 
-$Category = $_POST["CategoryTitle"];
+    $PostTitle = $_POST["PostTitle"];
+    $Category = $_POST["Category"];
+    // to take files values we can't use $_POST superglobal
+    // Instead, we must use $_FILES superglobal.
+
+    $Image = $_FILES["Image"]["name"];
+
+    // We can't save our whole image file inside our database.
+    // So, we will save the nsame of our image into our database.
+    // And we will save the actual image, somewhere inside our directory.
+    $Target = "uploads/" . basename($Image);
+    $PostText = $_POST["PostDescription"];
+
+    // Dummy Author for now
+    $Admin = "Subhasish";
+
+    // Formatting the time for our project.
+    // The date_default_timezone_set() function sets the default timezone used by 
+    // all date/time functions in the script.
+    date_default_timezone_set("Asia/Kolkata");
+    $CurrentTime = time();
+    $DateTime = strftime("%B-%d-%Y %H:%M:%S",$CurrentTime);
+    // echo $DateTime;
 
 
-// Dummy Author for now
-$Admin = "Subhasish";
 
-// Formatting the time for our project.
-// The date_default_timezone_set() function sets the default timezone used by 
-// all date/time functions in the script.
-date_default_timezone_set("Asia/Kolkata");
-$CurrentTime = time();
-$DateTime = strftime("%B-%d-%Y %H:%M:%S",$CurrentTime);
-// echo $DateTime;
-
-
-
-// checking whether the form field is empty or not.
-if(empty($Category)){
-    // I've created a session variable bellow with an error message.
-    $_SESSION["ErrorMessage"] = "All fields must be filled out.";
-    // calling our Redirect_to function.
-    Redirect_to("categories.php");
-}elseif(strlen($Category)<3){
-    $_SESSION["ErrorMessage"] = "Category title should be greater than 2 characters.";
-    Redirect_to("categories.php");
-}elseif(strlen($Category)>49){
-    $_SESSION["ErrorMessage"] = "Category title should be less than 49 characters.";
-    Redirect_to("categories.php");
-}else{
-    //In this block, we will have query to insert data into the database.
-    $sql = "INSERT INTO category(title, author, datetime)";
-    // $sql .= "VALUES($Category,$Admin,$DateTime)";
-    $sql .= "VALUES(:categoryName,:adminName, :datetime)";
-    // -> this is a notation for accessing objects in php.
-    // In this case, we're accessing the PDO object called prepare().
-    $stmp = $ConnectingDB->prepare($sql);
-    // Binding the pseudo values to the real values.
-    // The order of binding values don't matter.
-    $stmp->bindValue(':categoryName',$Category);
-    $stmp->bindValue(':adminName',$Admin);
-    $stmp->bindValue(':datetime',$DateTime);
-    // finally we need to perform the execute().
-    $Execute = $stmp->execute();
-
-    if($Execute){
-        $_SESSION["SuccessMessage"] = "Your New category is Added.";
-        Redirect_to("categories.php");
+    // checking whether the form field is empty or not.
+    if(empty($PostTitle)){
+        // I've created a session variable bellow with an error message.
+        $_SESSION["ErrorMessage"] = "Title can't be empty.";
+        // calling our Redirect_to function.
+        Redirect_to("AddNewPost.php");
+        // echo"
+        // <script>
+        // document.getElementById('title').focus();
+        // </script>";
+    }elseif(strlen($PostTitle)<5){
+        $_SESSION["ErrorMessage"] = "Post Title should be greater than 5 characters.";
+        Redirect_to("AddNewPost.php");
+    }elseif(strlen($PostText)>999){
+        $_SESSION["ErrorMessage"] = "Post Description should be less than 1000 characters.";
+        Redirect_to("AddNewPost.php");
     }else{
-        $_SESSION["ErrorMessage"] = "Something went wrong. Try Again!";
-        Redirect_to("categories.php");
+        //In this block, we will have query to insert data into the database.
+        $sql = "INSERT INTO posts(datetime , title ,category ,author ,image , post)";
+        // $sql .= "VALUES($Category,$Admin,$DateTime)";
+        $sql .= "VALUES(:datetime, :postTitle, :categoryName,:adminName, :imageName,:postDescription )";
+        // -> this is a notation for accessing objects in php.
+        // In this case, we're accessing the PDO object called prepare().
+        $stmp = $ConnectingDB->prepare($sql);
+        // Binding the pseudo values to the real values.
+        // The order of binding values don't matter.
+        $stmp->bindValue(':datetime',$DateTime);
+        $stmp->bindValue(':postTitle',$PostTitle);
+        $stmp->bindValue(':categoryName',$Category);
+        $stmp->bindValue(':adminName',$Admin);
+        $stmp->bindValue(':imageName',$Image);
+        $stmp->bindValue(':postDescription',$PostText);
+        // finally we need to perform the execute().
+        $Execute = $stmp->execute();
+
+        if($Execute){
+            $_SESSION["SuccessMessage"] = "Your New POST is Added.";
+            Redirect_to("AddNewPost.php");
+        }else{
+            $_SESSION["ErrorMessage"] = "Something went wrong. Try Again!";
+            Redirect_to("AddNewPost.php");
+        }
+
     }
 
-}
-
 
 }
-
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -128,7 +143,7 @@ if(empty($Category)){
                     echo Errormessage(); 
                     echo Successmessage();
                     ?>
-                <form class="" action="categories.php" method="post">
+                <form class="" action="AddNewPost.php" method="post" enctype="multipart/form-data">
                         <div class="card bg-secondary text-light mb-3">
                             <div class="card-body bg-dark">
                                 <div class="form-group">
@@ -151,9 +166,8 @@ if(empty($Category)){
                                                 // field name of the table are id, title.
                                                 $Id = $DataRows["id"];
                                                 $CategoryName = $DataRows["title"];
-
                                         ?>
-                                        <option value="<?php echo $Id; ?>"><?php echo $CategoryName; ?></option>
+                                            <option value="<?php echo $CategoryName; ?>"><?php echo $CategoryName; ?></option>
                                         <?php
                                             }
                                         ?>
@@ -171,6 +185,7 @@ if(empty($Category)){
                                     <label for="Post"><span class="FieldInfo">Post: </span></label>
                                     <textarea class="form-control" name="PostDescription" id="Post" cols="30" rows="5"></textarea>
                                 </div>
+
                                 <div class="row">
                                     <div class="col-lg-6 mb-2">
                                         <a href="dashboard.php" class="btn btn-block btn-warning btn-lg">
@@ -225,6 +240,10 @@ if(empty($Category)){
         };
         setTimeout(hideMessage, 3000);
 
+    </script>
+    <script type="text/javascript" src="ckeditor/ckeditor.js"></script>
+    <script type="text/javascript">
+        CKEDITOR.replace( 'PostDescription' );
     </script>
 </body>
 </html>
