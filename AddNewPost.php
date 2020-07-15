@@ -64,7 +64,8 @@ if(isset($_POST['Submit'])){
         $stmp->bindValue(':postDescription',$PostText);
         // finally we need to perform the execute().
         $Execute = $stmp->execute();
-
+        // The following line is must to actually upload our image into the uploads folder.
+        move_uploaded_file($_FILES["Image"]["tmp_name"],$Target);
         if($Execute){
             $_SESSION["SuccessMessage"] = "Your New POST is Added.";
             Redirect_to("AddNewPost.php");
