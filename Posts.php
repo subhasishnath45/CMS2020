@@ -83,6 +83,13 @@
         <section class="container py-2 mb-4">
         
             <div class="row">
+                <div class="col-lg-12 text-center">
+                <?php 
+                    echo Errormessage(); 
+                    echo Successmessage();
+                ?>
+                </div>
+
                 <div class="col-lg-12">
                     <table class="table table-bordered">
                         <thead class="thead-dark">
@@ -101,8 +108,10 @@
                         <tbody>
                         <?php 
                             global $ConnectingDB;
+                            // Fetching all of our posts from the posts table.
                             $sql = "SELECT * FROM posts";
                             $stmt = $ConnectingDB->query($sql);
+                            // variable for serial no of our post.
                             $sr = 1;
                             while($DataRows = $stmt->fetch()){
                                 $Id = $DataRows["id"];
@@ -112,7 +121,6 @@
                                 $Admin = $DataRows["author"];
                                 $Image = $DataRows["image"];
                                 $PostText = $DataRows["post"];
-
                         ?>
 
                         <tr>
@@ -167,10 +175,10 @@
                             <td><img src="uploads/<?php echo $Image; ?>" class="img-responsive" width="150px" height="100px"/></td>
                             <td>Comments</td>
                             <td>
-                                <a href="#"><span class="btn btn-warning btn-block mb-1">Edit</sppan></a>
-                                <a href="#"><span class="btn btn-danger btn-block">Delete</sppan></a>
+                                <a href="EditPost.php?id=<?php echo $Id; ?>"><span class="btn btn-warning btn-block mb-1">Edit</sppan></a>
+                                <a href="DeletePost.php?id=<?php echo $Id; ?>"><span class="btn btn-danger btn-block">Delete</sppan></a>
                             </td>
-                            <td><a href="#"><span class="btn btn-primary">Live Preview</sppan></a></td>
+                            <td><a href="FullPost.php?id=<?php echo $Id; ?>" target="_blank"><span class="btn btn-primary">Live Preview</sppan></a></td>
                         </tr>
 
                         <?php
@@ -200,6 +208,26 @@
     <script src="js/popper.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
     <script src="https://kit.fontawesome.com/b1a47ddc93.js" crossorigin="anonymous"></script>
+    <script>
+        document.getElementById('copyright-year').innerHTML = new Date().getFullYear();
+        // function to hide the success or error mesages after certain time.
+        function hideMessage() {
+            var error_msg = document.getElementById("error_alert");
+            var success_msg = document.getElementById("success_alert");
+            if(typeof(error_msg) != 'undefined' && error_msg != null){
+
+                error_msg.style.display = "none";
+
+            }
+            if(typeof(success_msg) != 'undefined' && success_msg != null){
+
+                success_msg.style.display = "none";
+
+            }
+        };
+        setTimeout(hideMessage, 3000);
+
+    </script>
     <script>
         document.getElementById('copyright-year').innerHTML = new Date().getFullYear();
     </script>

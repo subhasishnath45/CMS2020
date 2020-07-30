@@ -2,76 +2,36 @@
 <?php require_once("includes/Functions.php"); ?>
 <?php require_once("includes/Sessions.php"); ?>
 <?php 
+    $SearchQueryParameter = $_GET['id'];
+    //Fetching Existing content from our Database.
+    global $ConnectingDB;
+    // Getting the Query parameter variable named id.
+    // Now ruuning our SQL query.
+    $sql = "SELECT * FROM posts WHERE id='$SearchQueryParameter'";
+    // making a query to our posts table in the database.
+    $stmp = $ConnectingDB->query($sql);
+    // Checking if there is a record for our id.
+    while($DataRows = $stmp->fetch()){
+        $TitleToBeUpdated = $DataRows['title'];
+        $CategoryToBeUpdated = $DataRows['category'];
+        $ImageToBeUpdated = $DataRows['image'];
+        $PostToBeUpdated = $DataRows['post'];
+?>
+<?php 
+// Getting the query variable named id passed through URL.
+
 if(isset($_POST['Submit'])){
 
-    $PostTitle = $_POST["PostTitle"];
-    $Category = $_POST["Category"];
-    // to take files values we can't use $_POST superglobal
-    // Instead, we must use $_FILES superglobal.
+    $sql = "DELETE FROM posts WHERE id='$SearchQueryParameter'";
 
-    $Image = $_FILES["Image"]["name"];
+        $Execute = $ConnectingDB->query($sql);
 
-    // We can't save our whole image file inside our database.
-    // So, we will save the nsame of our image into our database.
-    // And we will save the actual image, somewhere inside our directory.
-    $Target = "uploads/" . basename($Image);
-    $PostText = $_POST["PostDescription"];
-
-    // Dummy Author for now
-    $Admin = "Subhasish";
-
-    // Formatting the time for our project.
-    // The date_default_timezone_set() function sets the default timezone used by 
-    // all date/time functions in the script.
-    date_default_timezone_set("Asia/Kolkata");
-    $CurrentTime = time();
-    $DateTime = strftime("%B-%d-%Y %H:%M:%S",$CurrentTime);
-    // echo $DateTime;
-
-
-
-    // checking whether the form field is empty or not.
-    if(empty($PostTitle)){
-        // I've created a session variable bellow with an error message.
-        $_SESSION["ErrorMessage"] = "Title can't be empty.";
-        // calling our Redirect_to function.
-        Redirect_to("AddNewPost.php");
-        // echo"
-        // <script>
-        // document.getElementById('title').focus();
-        // </script>";
-    }elseif(strlen($PostTitle)<5){
-        $_SESSION["ErrorMessage"] = "Post Title should be greater than 5 characters.";
-        Redirect_to("AddNewPost.php");
-    }elseif(strlen($PostText)>9999){
-        $_SESSION["ErrorMessage"] = "Post Description should be less than 1000 characters.";
-        Redirect_to("AddNewPost.php");
-    }else{
-        //In this block, we will have query to insert data into the database.
-        $sql = "INSERT INTO posts(datetime , title ,category ,author ,image , post)";
-        // $sql .= "VALUES($Category,$Admin,$DateTime)";
-        $sql .= "VALUES(:datetime, :postTitle, :categoryName,:adminName, :imageName,:postDescription )";
-        // -> this is a notation for accessing objects in php.
-        // In this case, we're accessing the PDO object called prepare().
-        $stmp = $ConnectingDB->prepare($sql);
-        // Binding the pseudo values to the real values.
-        // The order of binding values don't matter.
-        $stmp->bindValue(':datetime',$DateTime);
-        $stmp->bindValue(':postTitle',$PostTitle);
-        $stmp->bindValue(':categoryName',$Category);
-        $stmp->bindValue(':adminName',$Admin);
-        $stmp->bindValue(':imageName',$Image);
-        $stmp->bindValue(':postDescription',$PostText);
-        // finally we need to perform the execute().
-        $Execute = $stmp->execute();
-        // The following line is must to actually upload our image into the uploads folder.
-        move_uploaded_file($_FILES["Image"]["tmp_name"],$Target);
         if($Execute){
-            $_SESSION["SuccessMessage"] = "Your New POST is Added.";
-            Redirect_to("AddNewPost.php");
+            $_SESSION["SuccessMessage"] = "Your POST is Deleted Successfully.";
+            Redirect_to("Posts.php");
         }else{
             $_SESSION["ErrorMessage"] = "Something went wrong. Try Again!";
-            Redirect_to("AddNewPost.php");
+            Redirect_to("Posts.php");
         }
 
     }
@@ -84,7 +44,7 @@ if(isset($_POST['Submit'])){
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Add new Post</title>
+    <title>Delete Post</title>
     <link rel="stylesheet" href="css/bootstrap.css"/>
     <link rel="stylesheet" href="css/main.css" />
 </head>
@@ -121,7 +81,7 @@ if(isset($_POST['Submit'])){
                     </li>
                 </ul>
                 <ul class="navbar-nav">
-                    <li><a href=""><i class="fas fa-user-times text-secondary"></i> LogOut</a></li>
+                    <li><a href="#"><i class="fas fa-user-times text-secondary"></i> LogOut</a></li>
                 </ul>
             </div>
         </nav>
@@ -130,7 +90,7 @@ if(isset($_POST['Submit'])){
             <div class="container">
                 <div class="row">
                     <div class="col-md-12 text-center">
-                        <h1><i class="fas fa-edit"></i> Add New Post</h1>
+                        <h1><i class="fas fa-edit"></i> Delete Your Post</h1>
                     </div>
                 </div>
             </div>
@@ -141,52 +101,33 @@ if(isset($_POST['Submit'])){
             <div class="row">
                 <div class="offset-lg-1 col-lg-10 category-content-wrapper d-flex flex-column justify-content-center align-items-center">
                     <?php 
-                    echo Errormessage(); 
-                    echo Successmessage();
+                        echo Errormessage(); 
+                        echo Successmessage();
                     ?>
-                <form class="" action="AddNewPost.php" method="post" enctype="multipart/form-data">
+                    <form class="" action="DeletePost.php?id=<?php echo $SearchQueryParameter; ?>" method="post" enctype="multipart/form-data">
                         <div class="card bg-secondary text-light mb-3">
                             <div class="card-body bg-dark">
                                 <div class="form-group">
                                     <label for="title"><span class="FieldInfo">Post Title: </span></label>
-                                    <input class="form-control" type="text" name="PostTitle" id="title" placeholder="Type title here" value="">
+                                    <input class="form-control disabled" disabled="true" type="text" name="PostTitle" id="title" placeholder="Type title here" value="<?php echo $TitleToBeUpdated; ?>">
                                 </div>
                                 <div class="form-group">
-                                    <label for="CategoryTitle"><span class="FieldInfo">Choose category: </span></label>
-                                    <select class="form-control" name="Category" id="CategoryTitle">
-                                        <option disabled selected>Choose Post Category</option>
-                                        <?php 
-                                            // Fetching All categories from category table.
-                                            // global variable name is only required for php<5.7
-                                            global $ConnectingDB;
-                                            $sql = "SELECT * FROM category";
-                                            
-                                            $stmt = $ConnectingDB->query($sql);
-                                            while($DataRows = $stmt->fetch()){
-                                                // We will take only 2 columns from our table.
-                                                // field name of the table are id, title.
-                                                $Id = $DataRows["id"];
-                                                $CategoryName = $DataRows["title"];
-                                        ?>
-                                            <option value="<?php echo $CategoryName; ?>"><?php echo $CategoryName; ?></option>
-                                        <?php
-                                            }
-                                        ?>
+                                    <label for="CategoryTitle"><span class="FieldInfo">Post category: </span></label>
+                                    <select class="form-control" disabled="true" name="Category" id="CategoryTitle">
+                                        <option disabled selected><?php echo $CategoryToBeUpdated; ?></option>
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <div class="custom-file">
-                                        <input class="custom-file-input" type="file" name="Image" id="imageSelect"/>
-                                        <label class="custom-file-label" for="imageSelect">
-                                            Select Image...
-                                        </label>
-                                    </div>
+                                    <span class="FieldInfo">Existing Image: </span><br/>
+                                    <img src="uploads/<?php echo $ImageToBeUpdated; ?>" alt="" width="300px" class="mb-3"/>
+                                    <br/>
                                 </div>
                                 <div class="form-group">
                                     <label for="Post"><span class="FieldInfo">Post: </span></label>
-                                    <textarea class="form-control" name="PostDescription" id="Post" cols="30" rows="5"></textarea>
+                                    <textarea class="form-control" disabled="true" name="PostDescription" id="Post" cols="30" rows="5">
+                                        <?php echo $PostToBeUpdated; ?>
+                                    </textarea>
                                 </div>
-
                                 <div class="row">
                                     <div class="col-lg-6 mb-2">
                                         <a href="dashboard.php" class="btn btn-block btn-warning btn-lg">
@@ -194,14 +135,15 @@ if(isset($_POST['Submit'])){
                                         </a>
                                     </div>
                                     <div class="col-lg-6 mb-2">
-                                        <button type="submit" name="Submit" class="btn btn-success btn-block btn-lg">
-                                        <i class="fas fa-check"></i> Publish
+                                        <button type="submit" name="Submit" class="btn btn-danger btn-block btn-lg">
+                                        <i class="fas fa-trash"></i> Delete
                                         </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </form>
+
                 </div>
             </div>
         </section>

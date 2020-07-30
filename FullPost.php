@@ -65,40 +65,25 @@
                 <div class="col-sm-8">
                     <h1>Your Blog Posts</h1>
                     <h1 class="lead">Created By CAD CENTRE STUDENTS in 2020</h1>
-                    <?php 
-                    echo Errormessage(); 
-                    echo Successmessage();
-                    ?>
+
                     <?php 
                     global $ConnectingDB;
-                    // Search for blogs starts
-                    // if we search with a keyword, the following if block will be exected.
-                    if(isset($_GET["SearchButton"])){
-                        $Search = $_GET["Search"];
+
+                        // getting the id query variable value passed through URL.
+                        $PostIdFromURL = $_GET["id"];
+                        // The following if block will make sure that
+                        // No visitor can directly go to FullPost.php page.
+                        if(!isset($PostIdFromURL)){
+                            $_SESSION["ErrorMessage"] = "Bad Request!";
+                            Redirect_to("Blog.php");
+                        }
                         // Doing to prevent SQL injection.
                         // SQL statements with named parameters
                         $sql = "SELECT * FROM posts 
-                        WHERE datetime LIKE :search 
-                        OR title LIKE :search 
-                        OR category LIKE :search 
-                        OR post LIKE :search";
+                        WHERE id='$PostIdFromURL'";
 
-                        // Preparing our query
-                        $stmt = $ConnectingDB->prepare($sql);
-                        // binding psuedo values to real values.
-                        // '%'.$Search.'%' is used, so that, 
-                        // we can find result containing our search keyword.
-                        $stmt->bindValue(':search','%'.$Search.'%');
-                        // Finally executing the statement.
-                        $stmt->execute();
-                    }else{ // By default this else block will be executed.
-                        $sql = "SELECT * FROM posts ORDER BY id DESC";
-                        // N.B: No need to prevent SQL injection,
-                        // When the data directly comming from the database.
-                        // Then We will use simple query() method.
                         $stmt = $ConnectingDB->query($sql);
-                    }
-                        
+                       
                         
                         while($DataRows = $stmt->fetch()){
                             $PostId = $DataRows["id"];
@@ -122,17 +107,11 @@
 
   <div class="blog-body">
     <div class="blog-title">
-      <h1><a href="FullPost.php?id=<?php echo $PostId; ?>"><?php echo $PostTitle; ?></a></h1>
+      <h1><a href="#"><?php echo $PostTitle; ?></a></h1>
     </div>
     <div class="blog-summary">
       <?php 
-      if(strlen($PostDescription)>150){
-        $PostDescription = substr($PostDescription,0,150) . '...';
         echo html_entity_decode($PostDescription);
-      }else{
-        echo html_entity_decode($PostDescription);
-      }
-      
       ?>
     </div>
     <div class="blog-tags">
@@ -147,11 +126,6 @@
       <li class="published-date"><?php echo $DateTime; ?></li>
       <!-- <li class="comments"><a href="#"><svg class="icon-bubble"><use xlink:href="#icon-bubble"></use></svg><span class="numero">4</span></a></li>
       <li class="shares"><a href="#"><svg class="icon-star"><use xlink:href="#icon-star"></use></svg><span class="numero">1</span></a></li> -->
-      <li>
-          <a href="FullPost.php?id=<?php echo $PostId; ?>">
-              Read More...
-          </a>
-      </li>
     </ul>
   </div>
 
