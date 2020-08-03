@@ -1,7 +1,75 @@
 <?php require_once("includes/DB.php"); ?>
 <?php require_once("includes/Functions.php"); ?>
 <?php require_once("includes/Sessions.php"); ?>
+<!--php code for comment section-->
+<?php 
 
+$SearchQueryParameter = $_GET["id"];
+
+?>
+<?php 
+    // This if block should be placed at the very top ogf the page
+    if(isset($_POST['Submit'])){
+    // getting all of our form fields.
+    $CommenterName = $_POST["CommenterName"];
+    $CommenterEmail = $_POST["CommenterEmail"];
+    $CommenterThoughts = $_POST["CommenterThoughts"];
+
+
+    // Formatting the time for our project.
+    // The date_default_timezone_set() function sets the default timezone used by 
+    // all date/time functions in the script.
+    date_default_timezone_set("Asia/Kolkata");
+    $CurrentTime = time();
+    $DateTime = strftime("%B-%d-%Y %H:%M:%S",$CurrentTime);
+    // echo $DateTime;
+
+
+
+    // checking whether the form fields are empty or not.
+    if(empty($CommenterName) || empty($CommenterEmail) || empty($CommenterThoughts)){
+        // I've created a session variable bellow with an error message.
+        $_SESSION["ErrorMessage"] = "All fields must be filled out.";
+        // calling our Redirect_to function.
+        // As we can't access to the FullPost.php page directly,
+        // Therefore, we must pass the query parameter variable value
+        Redirect_to("FullPost.php?id=$SearchQueryParameter");
+    }elseif(strlen($CommenterThoughts)>500){
+        $_SESSION["ErrorMessage"] = "Comment length should be less than 500 characters.";
+        Redirect_to("FullPost.php?id=$SearchQueryParameter");
+    }else{
+        //In this block, we will have query to insert data into the database.
+        // The order of insertion must be same as in our database.
+        $sql = "INSERT INTO comments(datetime, name, email, comment, approvedby, status, post_id)";
+        // last 2 are default values for approvedby and status columns.
+        $sql .= "VALUES(:datetime, :name,:email,:comment, 'Pending', 'OFF',:postidfromurl)";
+        // -> this is a notation for accessing objects in php.
+        // In this case, we're accessing the PDO object called prepare().
+        $stmp = $ConnectingDB->prepare($sql);
+        // Binding the pseudo values to the real values.
+        // The order of binding values don't matter.
+        $stmp->bindValue(':datetime',$DateTime);
+        $stmp->bindValue(':name',$CommenterName);
+        $stmp->bindValue(':email',$CommenterEmail);
+        $stmp->bindValue(':comment',$CommenterThoughts);
+        $stmp->bindValue(':postidfromurl',$SearchQueryParameter);
+        // finally we need to perform the execute().
+        $Execute = $stmp->execute();
+
+        if($Execute){
+            $_SESSION["SuccessMessage"] = "Your comment is Added.";
+            Redirect_to("FullPost.php?id=$SearchQueryParameter");
+        }else{
+            $_SESSION["ErrorMessage"] = "Something went wrong. Try Again!";
+            Redirect_to("FullPost.php?id=$SearchQueryParameter");
+        }
+
+    }
+
+
+    }
+?>
+<!--php code for comment section-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -61,6 +129,12 @@
 
         <div class="container">
             <div class="row">
+                <div class="col-lg-12 text-center mt-4">
+                    <?php 
+                        echo Errormessage(); 
+                        echo Successmessage();
+                    ?>
+                </div>
                 <!--main area starts-->
                 <div class="col-sm-8">
                     <h1>Your Blog Posts</h1>
@@ -131,10 +205,101 @@
 
 </div>
                     
-                    <?php
-                        }
-                    ?>
+    <?php
+        }
+    ?>
 
+    <!-- Fetching comments starts -->
+        <div class="alert alert-info">
+            <span class="field-info">
+                    Comments
+            </span>
+        </div>
+    <?php 
+        global $ConnectingDB;
+        // getting all of the comments of the current post.
+        // $sql = "SELECT * FROM comments WHERE post_id='$SearchQueryParameter'";
+        
+        // Getting all of the comments of the current post, only if those are approved.
+        // or status field value is ON.
+        $sql = "SELECT * FROM comments WHERE post_id='$SearchQueryParameter' AND status='ON'";
+        $stmt = $ConnectingDB->query($sql);
+        // Loop through all of our existing comments.
+        while($DataRows = $stmt->fetch()){
+            $Comment = $DataRows["comment"];
+            $CommenterName = $DataRows["name"];
+            $CommentDate = $DataRows["datetime"];
+    ?>
+
+
+            <div class="media mb-2">
+                <div class="media-body ml-2">
+                        <div class="card">
+                            <div class="card-body d-flex justify-content-between">
+                                <img src="images/comment.png" class="rounded-circle" width="50" />
+                                <h6 class="lead text-uppercase"><?php echo $CommenterName; ?></h6>
+                                <p class="small mb-0 ">
+                                    <?php echo $CommentDate; ?>
+                                </p>
+                            </div>
+                            <div class="card-footer">
+                                <p>
+                                <?php echo $Comment; ?>
+                                </p>
+                            </div>
+                    </div>
+
+                </div>
+            </div>
+
+    <?php
+        }
+    ?>
+
+    <!-- Fetching comments ends -->
+
+    <!--comment part starts-->
+
+        <form action="FullPost.php?id=<?php echo $SearchQueryParameter; ?>" method="post" class="mt-5">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="FieldInfo">Share your thoughts about this post</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-group mb-2">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                                </span>
+                            </div>
+                            <input type="text" name="CommenterName" placeholder="Name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group mb-2">
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                                </span>
+                            </div>
+                            <input type="email" name="CommenterEmail" placeholder="Email" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group mb-2">
+                    <label for="comment">Comment:</label>
+                        <div class="input-group">
+                            <textarea name="CommenterThoughts" class="form-control" id="comment" cols="80" rows="8"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-success btn-block" type="submit" name="Submit">POST</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+    <!--comment part ends-->
 
                 </div>
                 <!--main area ends-->

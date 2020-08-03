@@ -2,6 +2,7 @@
 <?php require_once("includes/Functions.php"); ?>
 <?php require_once("includes/Sessions.php"); ?>
 <?php 
+// Getting the query variable named id passed through URL.
     $SearchQueryParameter = $_GET['id'];
     //Fetching Existing content from our Database.
     global $ConnectingDB;
@@ -12,24 +13,32 @@
     $stmp = $ConnectingDB->query($sql);
     // Checking if there is a record for our id.
     while($DataRows = $stmp->fetch()){
-        $TitleToBeUpdated = $DataRows['title'];
-        $CategoryToBeUpdated = $DataRows['category'];
-        $ImageToBeUpdated = $DataRows['image'];
-        $PostToBeUpdated = $DataRows['post'];
+        $TitleToBeDeleted = $DataRows['title'];
+        $CategoryToBeDeleted = $DataRows['category'];
+        $ImageToBeDeleted = $DataRows['image'];
+        $PostToBeDeleted = $DataRows['post'];
+    }
 ?>
 <?php 
-// Getting the query variable named id passed through URL.
-
+// When the Delete button is pressed.
 if(isset($_POST['Submit'])){
 
-    $sql = "DELETE FROM posts WHERE id='$SearchQueryParameter'";
+        $sql = "DELETE FROM posts WHERE id='$SearchQueryParameter'";
 
         $Execute = $ConnectingDB->query($sql);
-
+        // if deletion is successful.
         if($Execute){
+            // Deleting the Image from hard drive.
+            // Getting the image path and the image name 
+            // In early php versions:
+            //$Target_Path_To_DELETE_Image = "uploads/{$ImageToBeDeleted}";
+            $Target_Path_To_DELETE_Image = "uploads/$ImageToBeDeleted";
+            // The unlink() function is an inbuilt function in PHP which is used to delete a file.
+            // filename with Path : Required argument . Specifies the path to the file to delete
+            unlink($Target_Path_To_DELETE_Image);
             $_SESSION["SuccessMessage"] = "Your POST is Deleted Successfully.";
             Redirect_to("Posts.php");
-        }else{
+        }else{ // if deletion is not successful.
             $_SESSION["ErrorMessage"] = "Something went wrong. Try Again!";
             Redirect_to("Posts.php");
         }
@@ -37,7 +46,7 @@ if(isset($_POST['Submit'])){
     }
 
 
-}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -109,23 +118,23 @@ if(isset($_POST['Submit'])){
                             <div class="card-body bg-dark">
                                 <div class="form-group">
                                     <label for="title"><span class="FieldInfo">Post Title: </span></label>
-                                    <input class="form-control disabled" disabled="true" type="text" name="PostTitle" id="title" placeholder="Type title here" value="<?php echo $TitleToBeUpdated; ?>">
+                                    <input class="form-control disabled" disabled="true" type="text" name="PostTitle" id="title" placeholder="Type title here" value="<?php echo $TitleToBeDeleted; ?>">
                                 </div>
                                 <div class="form-group">
                                     <label for="CategoryTitle"><span class="FieldInfo">Post category: </span></label>
                                     <select class="form-control" disabled="true" name="Category" id="CategoryTitle">
-                                        <option disabled selected><?php echo $CategoryToBeUpdated; ?></option>
+                                        <option disabled selected><?php echo $CategoryToBeDeleted; ?></option>
                                     </select>
                                 </div>
                                 <div class="form-group">
                                     <span class="FieldInfo">Existing Image: </span><br/>
-                                    <img src="uploads/<?php echo $ImageToBeUpdated; ?>" alt="" width="300px" class="mb-3"/>
+                                    <img src="uploads/<?php echo $ImageToBeDeleted; ?>" alt="" width="300px" class="mb-3"/>
                                     <br/>
                                 </div>
                                 <div class="form-group">
                                     <label for="Post"><span class="FieldInfo">Post: </span></label>
                                     <textarea class="form-control" disabled="true" name="PostDescription" id="Post" cols="30" rows="5">
-                                        <?php echo $PostToBeUpdated; ?>
+                                        <?php echo $PostToBeDeleted; ?>
                                     </textarea>
                                 </div>
                                 <div class="row">
